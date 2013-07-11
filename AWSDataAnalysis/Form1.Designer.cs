@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.metricMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.plottedMetricsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -63,18 +63,18 @@
             // 
             // chart1
             // 
-            chartArea2.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea2);
+            chartArea1.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea1);
             this.chart1.ContextMenuStrip = this.metricMenu;
             this.chart1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            legend2.Name = "Legend1";
-            this.chart1.Legends.Add(legend2);
+            legend1.Name = "Legend1";
+            this.chart1.Legends.Add(legend1);
             this.chart1.Location = new System.Drawing.Point(0, 241);
             this.chart1.Name = "chart1";
-            series2.ChartArea = "ChartArea1";
-            series2.Legend = "Legend1";
-            series2.Name = "Series1";
-            this.chart1.Series.Add(series2);
+            series1.ChartArea = "ChartArea1";
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            this.chart1.Series.Add(series1);
             this.chart1.Size = new System.Drawing.Size(1016, 500);
             this.chart1.TabIndex = 0;
             this.chart1.Text = "chart1";
@@ -118,7 +118,6 @@
             this.startTBox.Name = "startTBox";
             this.startTBox.Size = new System.Drawing.Size(70, 20);
             this.startTBox.TabIndex = 2;
-            this.startTBox.Text = "7/1/2013";
             this.startTBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.startTBox_KeyDown);
             // 
             // endLabel
@@ -136,7 +135,6 @@
             this.endTBox.Name = "endTBox";
             this.endTBox.Size = new System.Drawing.Size(70, 20);
             this.endTBox.TabIndex = 4;
-            this.endTBox.Text = "7/5/2013";
             this.endTBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.endTBox_KeyDown);
             // 
             // refreshButton
