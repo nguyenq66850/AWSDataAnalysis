@@ -97,7 +97,7 @@ namespace AWSDataAnalysis
 
             // Allow chart zoom and set DateTime format
             chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
-            chart1.ChartAreas[0].AxisX.LabelStyle.Format = "MM/dd/yy hh:mm:ss";
+            chart1.ChartAreas[0].AxisX.LabelStyle.Format = "MM/dd/yy HH:mm:ss";
             // chart1.ChartAreas[0].AxisY.LabelStyle.Format = "#,##0.00";
         }
 
@@ -163,8 +163,8 @@ namespace AWSDataAnalysis
             }
             else
             {
-                double dTemp = chart1.ChartAreas[0].AxisX.ScaleView.ViewMaximum -
-                               chart1.ChartAreas[0].AxisX.ScaleView.ViewMinimum;
+                double dTemp = chart1.ChartAreas[0].AxisX.Maximum -
+                               chart1.ChartAreas[0].AxisX.Minimum;
                 //dTemp = (enddate - startdate).TotalDays;
                 double[] exp = new double[30];
                 exp[0] = 1;
