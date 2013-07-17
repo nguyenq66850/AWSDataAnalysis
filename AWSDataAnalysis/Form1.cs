@@ -48,8 +48,8 @@ namespace AWSDataAnalysis
             List<Color> preferredColor = new List<Color>()
                 {
                     Color.Blue,
-                    Color.Green,
                     Color.Red,
+                    Color.Green,
                     Color.BlueViolet,
                     Color.Maroon,
                     Color.Lime,
@@ -59,10 +59,13 @@ namespace AWSDataAnalysis
                     Color.Aquamarine
                 };
             // List<List<Metric>> metricbyNameSpace = new List<List<Metric>>();
-            List<List<Datapoint>> plottedDataPoints = new List<List<Datapoint>>();
+            // List<List<Datapoint>> plottedDataPoints = new List<List<Datapoint>>();
+            List<List<List<double>>> statData = new List<List<List<double>>>();
+            List<List<DateTime>> timestamp = new List<List<DateTime>>();
             List<int> plottedMetricIDs = new List<int>();
             List<int> plottedStat = new List<int>();
             List<int> plottedColorID = new List<int>();
+            List<double> scalefactor = new List<double>();
             List<int> searchResult = new List<int>();
             int[] fromindex;
             int[] toindex;
@@ -99,6 +102,7 @@ namespace AWSDataAnalysis
             chart1.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
             chart1.ChartAreas[0].AxisX.LabelStyle.Format = "MM/dd/yy HH:mm:ss";
             // chart1.ChartAreas[0].AxisY.LabelStyle.Format = "#,##0.00";
+            // chart1.ChartAreas[0].AxisY.IsLogarithmic = true;
         }
 
         private void Form1_Shown(object sender, EventArgs e)
@@ -151,6 +155,9 @@ namespace AWSDataAnalysis
             {
                 plottedStat.Add(-1); // no stat was plotted
             }
+
+            // Give control to search text box to start a search for metrics
+            searchTBox.Select();
         }
 
         private void updateZoom()
@@ -196,20 +203,43 @@ namespace AWSDataAnalysis
             HitTestResult result = chart1.HitTest(e.X, e.Y);
             if (result.PointIndex >= 0 && result.ChartElementType == ChartElementType.DataPoint)
             {
-                var tokens = result.Series.Name.Split(' ');
-                DataPoint point = result.Series.Points[result.PointIndex];
+                //var tokens = result.Series.LegendText.Split(' ');
+                //DataPoint point = result.Series.Points[result.PointIndex];
+                //string tip = String.Format("Value: {0}\nTime: {1}\nMetric: {2}\nNameSpace: {3}\nStat: {4}",
+                //                           point.YValues[0].ToString("#,##0.00"),
+                //                           DateTime.FromOADate(point.XValue).ToString("MM/dd/yy HH:mm:ss"),
+                //                           tokens[0],
+                //                           tokens[1],
+                //                           tokens[2]);
+                //for (int i = 3; i < tokens.Count() - 1; i++)
+                //{
+                //    var dim = tokens[i].Split('=');
+                //    tip += String.Format("\n{0}: {1}", dim[0], dim[1]);
+                //}
+
+                int pID = Convert.ToInt32(result.Series.Name);
+                int metricID = plottedMetricIDs[pID];
+                int stat = plottedStat[metricID];
+                Metric metric = metricList[metricID];
+                int i = result.PointIndex;
                 string tip = String.Format("Value: {0}\nTime: {1}\nMetric: {2}\nNameSpace: {3}\nStat: {4}",
-                                           point.YValues[0].ToString("#,##0.00"),
-                                           DateTime.FromOADate(point.XValue).ToString("MM/dd/yy HH:mm:ss"),
-                                           tokens[0],
-                                           tokens[1],
-                                           tokens[2]);
-                for (int i = 3; i < tokens.Count(); i++)
+                                           statData[pID][stat][i].ToString("#,##0.00"),
+                                           timestamp[pID][i].ToString("MM/dd/yy HH:mm:ss"),
+                                           metric.MetricName,
+                                           metric.Namespace,
+                                           statList[stat]);
+                foreach (Dimension dim in metric.Dimensions)
                 {
-                    var dim = tokens[i].Split('=');
-                    tip += String.Format("\n{0}: {1}", dim[0], dim[1]);
+                    tip += String.Format("\n{0}: {1}", dim.Name, dim.Value);
                 }
                 toolTip1.SetToolTip(chart1, tip);
+
+                //// For Debug
+                //DataPoint point = result.Object as DataPoint;
+                //DateTime x = DateTime.FromOADate(point.XValue);
+                //double y = point.YValues[0] / scalefactor[pID];
+                //Debug.WriteLine(String.Format("{0} {1}", x, timestamp[pID][i])); // These two should be the same
+                //Debug.WriteLine(String.Format("{0} {1}", y, statData[pID][stat][i])); // These two should be the same
             }
         }
 
@@ -233,60 +263,56 @@ namespace AWSDataAnalysis
             }
         }
 
-        private void addPointsToSeries(List<Datapoint> datapoints, Series series, int stat)
-        {
-            series.Points.Clear();
-            switch (stat)
-            {
-                case 0:
-                    foreach (Datapoint point in datapoints)
-                    {
-                        point.Timestamp = point.Timestamp.ToUniversalTime();
-                        series.Points.AddXY(point.Timestamp, point.Average);
-                    }
-                    break;
-                case 1:
-                    foreach (Datapoint point in datapoints)
-                    {
-                        point.Timestamp = point.Timestamp.ToUniversalTime();
-                        series.Points.AddXY(point.Timestamp, point.Minimum);
-                    }
-                    break;
-                case 2:
-                    foreach (Datapoint point in datapoints)
-                    {
-                        point.Timestamp = point.Timestamp.ToUniversalTime();
-                        series.Points.AddXY(point.Timestamp, point.Maximum);
-                    }
-                    break;
-                case 3:
-                    foreach (Datapoint point in datapoints)
-                    {
-                        point.Timestamp = point.Timestamp.ToUniversalTime();
-                        series.Points.AddXY(point.Timestamp, point.Sum);
-                    }
-                    break;
-                case 4:
-                    foreach (Datapoint point in datapoints)
-                    {
-                        point.Timestamp = point.Timestamp.ToUniversalTime();
-                        series.Points.AddXY(point.Timestamp, point.SampleCount);
-                    }
-                    break;
-            }
-        }
+        //private void addPointsToSeries(List<Datapoint> datapoints, Series series, int stat)
+        //{
+        //    series.Points.Clear();
+        //    switch (stat)
+        //    {
+        //        case 0:
+        //            foreach (Datapoint point in datapoints)
+        //            {
+        //                point.Timestamp = point.Timestamp.ToUniversalTime();
+        //                series.Points.AddXY(point.Timestamp, point.Average);
+        //            }
+        //            break;
+        //        case 1:
+        //            foreach (Datapoint point in datapoints)
+        //            {
+        //                point.Timestamp = point.Timestamp.ToUniversalTime();
+        //                series.Points.AddXY(point.Timestamp, point.Minimum);
+        //            }
+        //            break;
+        //        case 2:
+        //            foreach (Datapoint point in datapoints)
+        //            {
+        //                point.Timestamp = point.Timestamp.ToUniversalTime();
+        //                series.Points.AddXY(point.Timestamp, point.Maximum);
+        //            }
+        //            break;
+        //        case 3:
+        //            foreach (Datapoint point in datapoints)
+        //            {
+        //                point.Timestamp = point.Timestamp.ToUniversalTime();
+        //                series.Points.AddXY(point.Timestamp, point.Sum);
+        //            }
+        //            break;
+        //        case 4:
+        //            foreach (Datapoint point in datapoints)
+        //            {
+        //                point.Timestamp = point.Timestamp.ToUniversalTime();
+        //                series.Points.AddXY(point.Timestamp, point.SampleCount);
+        //            }
+        //            break;
+        //    }
+        //}
         
         // Change the stat of a plotted metric
         private void statCBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             ComboBox statCBox = (ComboBox) sender;
             int metricID = Convert.ToInt32(statCBox.Name);
-            int pID = plotID(metricID); // pID must be different than -1
-
-            // Update series
             plottedStat[metricID] = statCBox.SelectedIndex; // new stat
-            chart1.Series[pID].Name = getSeriesName(metricList[metricID], plottedStat[metricID]); // new name corresponding to new stat
-            addPointsToSeries(plottedDataPoints[pID], chart1.Series[pID], plottedStat[metricID]); // new data
+            updateChart();
         }
         
         // Add a combo box for a plotted metric to select the desired statistics
@@ -411,44 +437,41 @@ namespace AWSDataAnalysis
             statCBox.Dispose();
         }
 
-        private void updateSeriesColor()
-        {
-            for (int pID = 0; pID < chart1.Series.Count; pID++ )
-            {
-                if (pID < preferredColor.Count)
-                {
-                    chart1.Series[pID].Color = preferredColor[pID];
-                    chart1.Series[pID].MarkerColor = preferredColor[pID];
-                }
-                else break;
-            }
-        }
-        
         private void removeSeries(int pID, int metricID)
         {
-            chart1.Series.RemoveAt(pID);
-            updateSeriesColor();
+            statData.RemoveAt(pID);
+            timestamp.RemoveAt(pID);
+            // plottedDataPoints.RemoveAt(pID);
 
-            plottedDataPoints.RemoveAt(pID);
-
+            scalefactor.RemoveAt(pID);
+            
             plottedMetricIDs.RemoveAt(pID);
             plottedStat[metricID] = -1; 
 
             removeCBox(metricID);
         }
 
+        private void getandprocessData(int pID, int metricID)
+        {
+            var datapoints = getData(metricID, startdate, days, period);
+            var lld = new List<List<double>>();
+            lld.Add(datapoints.Select(a => a.Average).ToList());
+            lld.Add(datapoints.Select(a => a.Minimum).ToList());
+            lld.Add(datapoints.Select(a => a.Maximum).ToList());
+            lld.Add(datapoints.Select(a => a.Sum).ToList());
+            lld.Add(datapoints.Select(a => a.SampleCount).ToList());
+            statData.Add(lld);
+            timestamp.Add(datapoints.Select(a => a.Timestamp.ToUniversalTime()).ToList());
+            // plottedDataPoints.Add(datapoints);
+        }
+        
         private void addSeries(int metricID)
         {
             int pID = plottedMetricIDs.Count; // pID = this old count before adding metricID to the plotted list
             plottedMetricIDs.Add(metricID);
             plottedStat[metricID] = 0; // Choose Average stat by default
-
-            var datapoints = getData(metricID, startdate, days, period);
-            plottedDataPoints.Add(datapoints);
-
-            var series = plotSeries(pID, metricID);
-            chart1.Series.Add(series);
-            chart1.Legends.Last().Docking = Docking.Bottom;
+            scalefactor.Add(1);
+            getandprocessData(pID, metricID);
         }
 
         private void searchLView_ItemChecked(object sender, ItemCheckedEventArgs e)
@@ -524,7 +547,7 @@ namespace AWSDataAnalysis
             return datapoints;
         }
 
-        private string getSeriesName(Metric metric, int statID)
+        private string getSeriesName(Metric metric, int statID, double sf)
         {
             string name = String.Format("{0} {1} {2}",
                                         metric.MetricName,
@@ -536,6 +559,7 @@ namespace AWSDataAnalysis
                                         dim.Name,
                                         dim.Value);
             }
+            name += String.Format(" ({0}:1)", sf.ToString("#,##0"));
             return name;
         }
 
@@ -581,9 +605,11 @@ namespace AWSDataAnalysis
             days = (int)(enddate - startdate).TotalDays;
         }
 
-        private Series plotSeries(int pID, int metricID)
+        // Plot a series with scale factor sf
+        private Series plotSeries(int pID, int metricID, int stat, double sf)
         {
-            Series series = new Series(getSeriesName(metricList[metricID], plottedStat[metricID]));
+            Series series = new Series(pID.ToString());
+            series.LegendText = getSeriesName(metricList[metricID], stat, sf);
             series.ChartType = SeriesChartType.Line;
             series.BorderWidth = 2;
             series.MarkerStyle = MarkerStyle.Circle;
@@ -596,19 +622,59 @@ namespace AWSDataAnalysis
                 series.MarkerColor = preferredColor[pID];
             }
 
-            addPointsToSeries(plottedDataPoints[pID], series, plottedStat[metricID]);
+            for (int i = 0; i < timestamp[pID].Count; i++)
+            {
+                series.Points.AddXY(timestamp[pID][i], statData[pID][stat][i]*sf);
+            }
 
             return series;
         }
 
         private void updateChart()
         {
-            dpc = plottedDataPoints.Sum(a => a.Count);
+            chart1.Series.Clear();
+            
             // Set chart title
+            dpc = timestamp.Sum(a => a.Count);
             chart1.Titles.Clear();
-            chart1.Titles.Add(String.Format("{0} series, {1} data points",
+            chart1.Titles.Add(String.Format("{0} series, {1} data points, from {2}, to {3}, {4}s period",
                 plottedMetricIDs.Count,
-                dpc));
+                dpc,
+                startdate.ToShortDateString(),
+                enddate.ToShortDateString(),
+                period));
+
+            double cmax = 0;
+            double[] smax = new double[plottedMetricIDs.Count];
+            for (int pID = 0; pID < plottedMetricIDs.Count; pID++)
+            {
+                int metricID = plottedMetricIDs[pID];
+                int stat = plottedStat[metricID];
+                smax[pID] = statData[pID][stat].Max();
+                if (cmax < smax[pID])
+                {
+                    cmax = smax[pID];
+                }
+            }
+
+            for (int pID = 0; pID < plottedMetricIDs.Count; pID++)
+            {
+                int metricID = plottedMetricIDs[pID];
+                int stat = plottedStat[metricID];
+                if (smax[pID] !=0)
+                {
+                    double sf = 1;
+                    while (smax[pID] * 7 < cmax)
+                    {
+                        smax[pID] *= 10;
+                        sf *= 10;
+                    }
+                    scalefactor[pID] = sf;
+                    chart1.Series.Add(plotSeries(pID, metricID, stat, sf));
+                }
+            }
+            
+            chart1.Legends.Last().Docking = Docking.Bottom;
             updateZoom();
         }
 
@@ -649,21 +715,15 @@ namespace AWSDataAnalysis
 
             period = getPeriod(periodCBox.Text);
 
-            // Initialize the total number of data points and re-get data
-            plottedDataPoints.Clear();
-            for (int i = 0; i < plottedMetricIDs.Count; i++)
-            {
-                var datapoints = getData(plottedMetricIDs[i], startdate, days, period);
-                plottedDataPoints.Add(datapoints);
-            }
+            // Clear old data
+            statData.Clear();
+            timestamp.Clear();
+            // plottedDataPoints.Clear();
+            // chart1.Series.Clear();
 
-            // Clear the chart and readd series
-            chart1.Series.Clear();
             for (int i = 0; i < plottedMetricIDs.Count; i++)
             {
-                var series = plotSeries(i, plottedMetricIDs[i]);
-                chart1.Series.Add(series);
-                chart1.Legends.Last().Docking = Docking.Bottom;
+                getandprocessData(i, plottedMetricIDs[i]);
             }
 
             updateChart();
@@ -708,6 +768,7 @@ namespace AWSDataAnalysis
             SaveFileDialog fd = new SaveFileDialog();
             fd.AddExtension = true;
             fd.DefaultExt = ".csv";
+            fd.Filter = "CSV (Comma delimited)|*.csv";
             if (fd.ShowDialog() == DialogResult.OK)
             {
                 string filename = fd.FileName;
@@ -717,23 +778,25 @@ namespace AWSDataAnalysis
                     for (int i = 0; i < plottedMetricIDs.Count; i++)
                     {
                         Metric metric = metricList[plottedMetricIDs[i]];
-                        sw.Write(String.Format("TimeStamp,Average,Minimum,Maximum,Sum,SampleCount,{0},{1}",metric.MetricName, metric.Namespace));
+                        sw.Write("TimeStamp");
+                        for (int stat = 0; stat < statList.Count; stat++)
+                        {
+                            sw.Write("," + statList[stat]);
+                        }
+                        sw.Write(String.Format(",{0},{1}", metric.MetricName, metric.Namespace));
                         foreach (var dim in metric.Dimensions)
                         {
-                            sw.Write(String.Format(",{0}={1}",
-                                                   dim.Name,
-                                                   dim.Value));
+                            sw.Write(String.Format(",{0}={1}", dim.Name, dim.Value));
                         }
                         sw.WriteLine();
-                        for (int j = 0; j < plottedDataPoints[i].Count; j++)
+                        for (int j = 0; j < timestamp[i].Count; j++)
                         {
-                            sw.WriteLine(String.Format("{0},{1},{2},{3},{4},{5}",
-                                                       plottedDataPoints[i][j].Timestamp,
-                                                       plottedDataPoints[i][j].Average,
-                                                       plottedDataPoints[i][j].Minimum,
-                                                       plottedDataPoints[i][j].Maximum,
-                                                       plottedDataPoints[i][j].Sum,
-                                                       plottedDataPoints[i][j].SampleCount));
+                            sw.Write(timestamp[i][j]);
+                            for (int stat = 0; stat < statList.Count; stat++)
+                            {
+                                sw.Write(String.Format(",{0}", statData[i][stat][j]));
+                            }
+                            sw.WriteLine();
                         }
                         sw.WriteLine();
                     }
