@@ -643,6 +643,10 @@ namespace AWSDataAnalysis
                 startdate.ToShortDateString(),
                 enddate.ToShortDateString(),
                 period));
+            if (dpc == 0)
+            {
+                return;
+            }
 
             double cmax = 0;
             double[] smax = new double[plottedMetricIDs.Count];
@@ -650,7 +654,14 @@ namespace AWSDataAnalysis
             {
                 int metricID = plottedMetricIDs[pID];
                 int stat = plottedStat[metricID];
-                smax[pID] = statData[pID][stat].Max();
+                if (statData[pID][stat].Count == 0)
+                {
+                    smax[pID] = 0;
+                }
+                else
+                {
+                    smax[pID] = statData[pID][stat].Max();
+                }
                 if (cmax < smax[pID])
                 {
                     cmax = smax[pID];
@@ -661,17 +672,18 @@ namespace AWSDataAnalysis
             {
                 int metricID = plottedMetricIDs[pID];
                 int stat = plottedStat[metricID];
-                if (smax[pID] !=0)
+                double sf = 1;
+                if (smax[pID] != 0)
                 {
-                    double sf = 1;
                     while (smax[pID] * 7 < cmax)
                     {
                         smax[pID] *= 10;
                         sf *= 10;
                     }
-                    scalefactor[pID] = sf;
-                    chart1.Series.Add(plotSeries(pID, metricID, stat, sf));
+                    
                 }
+                scalefactor[pID] = sf;
+                chart1.Series.Add(plotSeries(pID, metricID, stat, sf));
             }
             
             chart1.Legends.Last().Docking = Docking.Bottom;
